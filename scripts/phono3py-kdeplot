@@ -321,6 +321,12 @@ def main(args):
             y_max=args.ymax,
             density_ratio=args.density_ratio,
         )
+
+        # Save the Phonon Life Time data points to a CSV file
+        data_points = np.column_stack((x, y))
+        csv_filename = "PhLT.csv"
+        np.savetxt(csv_filename, data_points, delimiter=',', header="Frequency (THz), Lifetime (ps)")
+
         fig = plot(
             plt,
             xi,
