@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/prs221/anaconda3/envs/phono3py/bin/python
 
 import argparse
 import os
@@ -322,39 +322,59 @@ def main(args):
             density_ratio=args.density_ratio,
         )
 
-        # Save the Phonon Life Time data points to a CSV file
+        # Save the data points to a CSV file
         data_points = np.column_stack((x, y))
-        csv_filename = "PhLT.csv"
+        csv_filename = "data_points.csv"
         np.savetxt(csv_filename, data_points, delimiter=',', header="Frequency (THz), Lifetime (ps)")
 
-        fig = plot(
-            plt,
-            xi,
-            yi,
-            zi,
-            x,
-            y,
-            short_nbinds,
-            args.nbins,
-            y_max=args.ymax,
-            z_max=args.zmax,
-            cmap=args.cmap,
-            aspect=args.aspect,
-            flip=args.flip,
-            no_points=args.no_points,
-            show_colorbar=(not args.hide_colorbar),
-            point_size=args.point_size,
-            title=title,
-        )
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    from scipy.stats import gaussian_kde
 
-        if args.output_filename:
-            fig.savefig(args.output_filename)
-        else:
-            if s:
-                fig.savefig("lifetime-%s.png" % s)
-            else:
-                fig.savefig("lifetime.png")
-        plt.close(fig)
+    data = pd.read_csv("data_points.csv", names=["Frequency (THz)", "Lifetime (ps)"], header=0)
+    x = data["Frequency (THz)"].values
+    y = data["Lifetime (ps)"].values
+    kde = gaussian_kde([x, y])
+
+    x_grid, y_grid = np.meshgrid(np.linspace(x.min(), x.max(), 300), np.linspace(y.min(), y.max(), 300))
+    z = kde([x_grid.flatten(), y_grid.flatten()]).reshape(x_grid.shape)
+
+    plt.figure(figsize=(10, 8))
+    plt.imshow(z, cmap="viridis", extent=[x.min(), x.max(), y.min(), y.max()], origin="lower", aspect="auto")
+    plt.colorbar(label="")
+    plt.scatter(x, y, s=2, c='black', marker='o', alpha=0.6, edgecolors='none')
+    plt.xlabel("Phonon Frequency (THz)")
+    plt.ylabel("Lifetime (ps)")
+    plt.savefig("Lifetime.png")
+
+#       fig = plot(
+#            plt,
+#            xi,
+#            yi,
+#            zi,
+#            x,
+#            y,
+#            short_nbinds,
+#            args.nbins,
+#            y_max=args.ymax,
+#            z_max=args.zmax,
+#            cmap=args.cmap,
+#            aspect=args.aspect,
+#            flip=args.flip,
+#            no_points=args.no_points,
+#            show_colorbar=(not args.hide_colorbar),
+#            point_size=args.point_size,
+#            title=title,
+#        )
+
+#        if args.output_filename:
+#            fig.savefig(args.output_filename)
+#        else:
+#            if s:
+#                fig.savefig("lifetime-%s.png" % s)
+#            else:
+#                fig.savefig("lifetime.png")
+#        plt.close(fig)
 
 
 if __name__ == "__main__":
